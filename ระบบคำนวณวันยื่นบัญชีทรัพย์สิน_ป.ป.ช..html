@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบคำนวณวันยื่นบัญชีทรัพย์สินและหนี้สิน - สำนักงาน ป.ป.ช.</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts (Sarabun & Prompt) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        nacc: {
+                            purple: '#4C1D95',      // Deep Royal Purple
+                            darkpurple: '#2E1065',  // Dark Violet Header/Footer
+                            lightpurple: '#F3E8FF', // Light Soft Purple BG
+                            accent: '#7C3AED',      // Bright Purple Accent
+                            gold: '#D4AF37',        // Gold Border/Accent
+                            lightgold: '#FEF08A',
+                            bg: '#FAF5FF'
+                        }
+                    },
+                    fontFamily: {
+                        prompt: ['Prompt', 'sans-serif'],
+                        sarabun: ['Sarabun', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: #f8f5ff;
+        }
+        h1, h2, h3, h4, .font-prompt {
+            font-family: 'Prompt', sans-serif;
+        }
+        .purple-gradient {
+            background: linear-gradient(135deg, #2E1065 0%, #4C1D95 60%, #6D28D9 100%);
+        }
+        .gold-gradient {
+            background: linear-gradient(135deg, #BF953F 0%, #FCF6BA 25%, #B38728 50%, #FBF5B7 75%, #AA771C 100%);
+        }
+        .card-shadow {
+            box-shadow: 0 10px 25px -5px rgba(76, 29, 149, 0.08), 0 8px 10px -6px rgba(76, 29, 149, 0.04);
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-800 flex flex-col justify-between">
+
+    <!-- Header / Navbar -->
+    <header class="purple-gradient text-white border-b-4 border-amber-400 shadow-md sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 py-3 sm:py-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-full bg-white/10 border border-amber-400/50 flex items-center justify-center p-1 shrink-0">
+                    <i class="fa-solid fa-wallet text-2xl text-amber-300"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg sm:text-xl font-bold tracking-wide text-amber-300">ระบบคำนวณวันที่มีหน้าที่ยื่นบัญชีทรัพย์สินและหนี้สิน</h1>
+                    <p class="text-xs sm:text-sm text-purple-200 font-light">ตามพระราชบัญญัติประกอบรัฐธรรมนูญว่าด้วยการป้องกันและปราบปรามการทุจริต พ.ศ. 2561</p>
+                </div>
+            </div>
+            <div class="text-right hidden md:block border-l border-purple-400/30 pl-4">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-400/20 text-amber-200 border border-amber-400/30">
+                    <i class="fa-solid fa-file-invoice-dollar mr-1.5"></i> ตรวจสอบบัญชีทรัพย์สิน ป.ป.ช.
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="max-w-6xl mx-auto px-4 py-6 sm:py-8 flex-grow w-full">
+
+        <!-- Top Announcement Banner -->
+        <div class="bg-purple-50 border-l-4 border-nacc-purple p-4 rounded-r-lg shadow-sm mb-6 flex items-start gap-3">
+            <i class="fa-solid fa-circle-info text-nacc-purple text-xl mt-0.5 shrink-0"></i>
+            <div class="text-sm text-slate-700 leading-relaxed">
+                <strong class="font-bold text-nacc-purple">คำแนะนำเบื้องต้น:</strong> ผู้ดำรงตำแหน่งทางการเมือง ผู้ดำรงตำแหน่งในองค์กรอิสระ และเจ้าหน้าที่ของรัฐตามที่กฎหมายกำหนด มีหน้าที่ยื่นบัญชีทรัพย์สินและหนี้สินของตนเอง คู่สมรส (ทั้งที่จดทะเบียนและมิได้จดทะเบียนแต่อยู่กินกันฉันสามีภรรยา) และบุตรที่ยังไม่บรรลุนิติภาวะ
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            <!-- Left Column: Form Controls (5 cols on lg) -->
+            <div class="lg:col-span-5 space-y-6">
+                <div class="bg-white rounded-xl p-5 sm:p-6 card-shadow border border-purple-100">
+                    <h2 class="text-lg font-bold text-nacc-purple border-b pb-3 mb-5 flex items-center gap-2">
+                        <i class="fa-solid fa-calculator text-amber-500"></i> กำหนดข้อมูลการคำนวณ
+                    </h2>
+
+                    <form id="calcForm" onsubmit="event.preventDefault(); calculateDueDate();" class="space-y-5">
+                        
+                        <!-- 1. Case Type -->
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">
+                                1. เลือกกรณีการยื่นบัญชีฯ <span class="text-red-500">*</span>
+                            </label>
+                            <div class="space-y-2.5">
+                                <label class="flex items-start p-3 border rounded-lg cursor-pointer hover:bg-purple-50/50 transition border-slate-200 has-[:checked]:border-nacc-purple has-[:checked]:bg-purple-50">
+                                    <input type="radio" name="declarationCase" value="entry" checked class="mt-1 text-nacc-purple focus:ring-nacc-purple" onchange="updateLabels()">
+                                    <div class="ml-3">
+                                        <span class="block text-sm font-medium text-slate-800">กรณีเข้ารับตำแหน่ง</span>
+                                        <span class="block text-xs text-slate-500">ยื่นภายใน 60 วัน นับแต่วันเข้ารับตำแหน่ง</span>
+                                    </div>
+                                </label>
+
+                                <label class="flex items-start p-3 border rounded-lg cursor-pointer hover:bg-purple-50/50 transition border-slate-200 has-[:checked]:border-nacc-purple has-[:checked]:bg-purple-50">
+                                    <input type="radio" name="declarationCase" value="exit" class="mt-1 text-nacc-purple focus:ring-nacc-purple" onchange="updateLabels()">
+                                    <div class="ml-3">
+                                        <span class="block text-sm font-medium text-slate-800">กรณีพ้นจากตำแหน่ง</span>
+                                        <span class="block text-xs text-slate-500">ยื่นภายใน 60 วัน นับแต่วันพ้นจากตำแหน่ง</span>
+                                    </div>
+                                </label>
+
+                                <label class="flex items-start p-3 border rounded-lg cursor-pointer hover:bg-purple-50/50 transition border-slate-200 has-[:checked]:border-nacc-purple has-[:checked]:bg-purple-50">
+                                    <input type="radio" name="declarationCase" value="every3years" class="mt-1 text-nacc-purple focus:ring-nacc-purple" onchange="updateLabels()">
+                                    <div class="ml-3">
+                                        <span class="block text-sm font-medium text-slate-800">กรณีทุก 3 ปีที่อยู่ในตำแหน่ง</span>
+                                        <span class="block text-xs text-slate-500">กรณีดำรงตำแหน่งติดต่อกัน ยื่นภายใน 60 วัน</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- 2. Start Date -->
+                        <div>
+                            <label for="startDate" id="startDateLabel" class="block text-sm font-semibold text-slate-700 mb-2">
+                                2. วันที่เข้ารับตำแหน่ง <span class="text-red-500">*</span>
+                            </label>
+                            <div class="relative">
+                                <input type="date" id="startDate" required class="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-nacc-purple focus:border-nacc-purple outline-none text-slate-800 text-sm" onchange="calculateDueDate()">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                                    <i class="fa-regular fa-calendar-days text-nacc-purple"></i>
+                                </div>
+                            </div>
+                            <p class="text-xs text-slate-500 mt-1" id="dateHint">ระบุวันที่ที่มีผลตามคำสั่งแต่งตั้ง/วันเข้าปฏิบัติหน้าที่</p>
+                        </div>
+
+                        <!-- 3. Extension Option -->
+                        <div class="pt-2 border-t border-slate-100">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" id="extensionRequested" class="w-4 h-4 text-nacc-purple rounded focus:ring-nacc-purple" onchange="calculateDueDate()">
+                                <span class="text-sm font-medium text-slate-700">ได้รับอนุมัติขยายเวลาการยื่น (ป.ป.ช.)</span>
+                            </label>
+                            
+                            <div id="extensionDaysBox" class="hidden mt-3 pl-6">
+                                <label class="block text-xs font-medium text-slate-600 mb-1">จำนวนวันที่ได้รับอนุมัติให้ขยาย (ไม่เกิน 30 วัน):</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="number" id="extensionDays" min="1" max="30" value="30" class="w-24 px-3 py-1.5 border border-slate-300 rounded-md text-sm text-center font-bold text-nacc-purple focus:ring-2 focus:ring-nacc-purple outline-none" oninput="calculateDueDate()">
+                                    <span class="text-xs text-slate-600">วัน</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button type="button" onclick="calculateDueDate()" class="w-full purple-gradient hover:opacity-95 text-white font-prompt font-semibold py-3 px-4 rounded-lg shadow-md transition flex items-center justify-center gap-2 border border-amber-400/30">
+                            <i class="fa-solid fa-coins text-amber-300"></i> คำนวณวันครบกำหนด
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Quick Help Card -->
+                <div class="bg-amber-50/80 border border-amber-200 rounded-xl p-5 text-sm text-slate-700 space-y-2">
+                    <h3 class="font-bold text-amber-900 font-prompt flex items-center gap-2">
+                        <i class="fa-solid fa-triangle-exclamation text-amber-600"></i> ข้อควรระวังการนับระยะเวลา
+                    </h3>
+                    <ul class="list-disc list-inside space-y-1 text-xs sm:text-sm text-slate-700 leading-relaxed">
+                        <li>เริ่มนับวันถัดไปเป็น "วันที่ 1" (นับต่อเนื่องกันไปทุกวัน ไม่เว้นวันหยุด)</li>
+                        <li>ระบบจะนับวันตามปฏิทินตรงตามจำนวนวัน 60 วันโดยตรง</li>
+                        <li>คำร้องขอขยายเวลาต้องยื่น **ก่อนครบกำหนด 60 วัน**</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Right Column: Results & Checklist (7 cols on lg) -->
+            <div class="lg:col-span-7 space-y-6">
+                
+                <!-- Output Results Card -->
+                <div class="bg-white rounded-xl p-6 card-shadow border border-purple-100 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
+
+                    <h2 class="text-lg font-bold text-nacc-purple border-b pb-3 mb-5 flex items-center gap-2">
+                        <i class="fa-solid fa-square-poll-vertical text-amber-500"></i> ผลการคำนวณระยะเวลา
+                    </h2>
+
+                    <!-- Empty State -->
+                    <div id="emptyResult" class="py-12 text-center text-slate-400">
+                        <i class="fa-regular fa-calendar-check text-5xl mb-3 text-purple-200"></i>
+                        <p class="text-base font-medium">กรุณาเลือกประเภทและระบุวันที่ด้านซ้ายเพื่อคำนวณ</p>
+                    </div>
+
+                    <!-- Computed Result View -->
+                    <div id="resultContent" class="hidden space-y-5">
+                        
+                        <!-- Main Status Box -->
+                        <div class="bg-gradient-to-r from-nacc-darkpurple to-nacc-purple text-white rounded-xl p-5 shadow-inner border-l-4 border-amber-400">
+                            <span class="text-xs uppercase tracking-wider text-amber-300 font-semibold font-prompt">วันครบกำหนด ยื่นบัญชีทรัพย์สินฯ</span>
+                            <div class="text-2xl sm:text-3xl font-bold font-prompt text-white mt-1 mb-2" id="resDueDateTh">
+                                -
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2 text-xs text-slate-200">
+                                <span id="resCountdownTag" class="px-2.5 py-1 rounded-full font-semibold bg-amber-400 text-slate-900">
+                                    -
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Timeline details -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                            <div class="p-3.5 bg-purple-50/50 border border-purple-100 rounded-lg">
+                                <span class="text-xs text-slate-500 block mb-1">วันเริ่มต้น (ตามที่ระบุ)</span>
+                                <span class="font-bold text-slate-800" id="resStartDateTh">-</span>
+                            </div>
+                            <div class="p-3.5 bg-purple-50/50 border border-purple-100 rounded-lg">
+                                <span class="text-xs text-slate-500 block mb-1">เริ่มนับวันที่ 1 (วันถัดไป)</span>
+                                <span class="font-bold text-slate-800" id="resDayOneTh">-</span>
+                            </div>
+                            <div class="p-3.5 bg-purple-50/50 border border-purple-100 rounded-lg">
+                                <span class="text-xs text-slate-500 block mb-1">ระยะเวลารวม</span>
+                                <span class="font-bold text-slate-800" id="resTotalDaysTh">60 วัน</span>
+                            </div>
+                            <div class="p-3.5 bg-purple-50/50 border border-purple-100 rounded-lg" id="extDetailBox">
+                                <span class="text-xs text-slate-500 block mb-1">สิทธิ์ขยายเวลาสูงสุด</span>
+                                <span class="font-bold text-slate-800" id="resExtTh">ขยายเพิ่มได้ไม่เกิน 30 วัน</span>
+                            </div>
+                        </div>
+
+                        <!-- Extension Guidance -->
+                        <div class="p-4 bg-purple-50 border border-purple-200 rounded-lg text-xs sm:text-sm text-slate-700 space-y-1">
+                            <div class="font-semibold text-nacc-purple font-prompt flex items-center gap-1.5">
+                                <i class="fa-solid fa-clock-rotate-left"></i> เงื่อนไขการขอยื่นขยายเวลา:
+                            </div>
+                            <p class="leading-relaxed">
+                                หากมีความจำเป็นไม่สามารถยื่นได้ทันตามกำหนด ต้องยื่น **คำร้องขอขยายเวลาพร้อมระบุเหตุผล** ต่อประธานกรรมการ ป.ป.ช. <strong class="text-red-600">ล่วงหน้าก่อนสิ้นสุดกำหนดเวลา 60 วัน</strong> (ป.ป.ช. อาจอนุมัติขยายได้ไม่เกิน 30 วัน)
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Required Assets & Documents Section -->
+                <div class="bg-white rounded-xl p-6 card-shadow border border-purple-100">
+                    <h2 class="text-lg font-bold text-nacc-purple border-b pb-3 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-folder-open text-amber-500"></i> รายการทรัพย์สินและเอกสารสำคัญที่ต้องเตรียม
+                    </h2>
+
+                    <!-- Category Tabs -->
+                    <div class="flex border-b border-purple-100 text-sm font-medium mb-4 overflow-x-auto">
+                        <button onclick="switchTab('persons')" id="tab-persons" class="py-2.5 px-4 text-nacc-purple border-b-2 border-nacc-purple font-bold whitespace-nowrap">
+                            1. ขอบเขตบุคคลที่ต้องยื่น
+                        </button>
+                        <button onclick="switchTab('assets')" id="tab-assets" class="py-2.5 px-4 text-slate-500 hover:text-nacc-purple border-b-2 border-transparent font-medium whitespace-nowrap">
+                            2. รายการทรัพย์สิน-หนี้สิน
+                        </button>
+                        <button onclick="switchTab('docs')" id="tab-docs" class="py-2.5 px-4 text-slate-500 hover:text-nacc-purple border-b-2 border-transparent font-medium whitespace-nowrap">
+                            3. เอกสารหลักฐานประกอบ
+                        </button>
+                    </div>
+
+                    <!-- Tab Contents -->
+                    <!-- Tab 1: Persons -->
+                    <div id="content-persons" class="space-y-3 text-sm text-slate-700">
+                        <p class="text-xs text-slate-500 mb-2">ต้องแสดงรายการทรัพย์สินและหนี้สินที่มีอยู่จริง ณ วันที่มีหน้าที่ยื่น ของบุคคลดังต่อไปนี้:</p>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div class="p-3 bg-purple-50/50 rounded-lg border border-purple-100 text-center">
+                                <div class="w-8 h-8 rounded-full bg-purple-100 text-nacc-purple mx-auto mb-2 flex items-center justify-center font-bold">1</div>
+                                <span class="font-bold text-slate-800 block mb-1">ผู้ดำรงตำแหน่ง</span>
+                                <span class="text-xs text-slate-500">ตนเอง (ผู้มีหน้าที่ยื่น)</span>
+                            </div>
+                            <div class="p-3 bg-purple-50/50 rounded-lg border border-purple-100 text-center">
+                                <div class="w-8 h-8 rounded-full bg-purple-100 text-nacc-purple mx-auto mb-2 flex items-center justify-center font-bold">2</div>
+                                <span class="font-bold text-slate-800 block mb-1">คู่สมรส</span>
+                                <span class="text-xs text-slate-500">จดทะเบียน / ไม่จดทะเบียน (อยู่กินฉันสามีภรรยา)</span>
+                            </div>
+                            <div class="p-3 bg-purple-50/50 rounded-lg border border-purple-100 text-center">
+                                <div class="w-8 h-8 rounded-full bg-purple-100 text-nacc-purple mx-auto mb-2 flex items-center justify-center font-bold">3</div>
+                                <span class="font-bold text-slate-800 block mb-1">บุตรที่ยังไม่บรรลุนิติภาวะ</span>
+                                <span class="text-xs text-slate-500">อายุยังไม่ครบ 20 ปีบริบูรณ์</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab 2: Assets (Categorized as per NACC Official Forms) -->
+                    <div id="content-assets" class="hidden space-y-4 text-sm text-slate-700">
+                        
+                        <!-- ทรัพย์สิน 9 หมวด -->
+                        <div>
+                            <h3 class="font-bold text-nacc-purple font-prompt text-xs sm:text-sm uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                                <i class="fa-solid fa-coins text-amber-500"></i> รายการทรัพย์สิน (9 หมวด)
+                            </h3>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs sm:text-sm">
+                                <div class="flex items-start gap-2 p-2.5 bg-slate-50 rounded-lg border border-slate-200">
+                                    <span class="w-5 h-5 rounded-full bg-purple-100 text-nacc-purple font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">1</span>
+                                    <span><strong>เงินสด:</strong> เงินบาทและธนบัตรต่างประเทศที่มีไว้ในครอบครอง</span>
+                                </div>
+                                <div class="flex items-start gap-2 p-2.5 bg-slate-50 rounded-lg border border-slate-200">
+                                    <span class="w-5 h-5 rounded-full bg-purple-100 text-nacc-purple font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">2</span>
+                                    <span><strong>เงินฝาก:</strong> บัญชีฝากประจำ, ออมทรัพย์, กระแสรายวัน ทุกธนาคาร/สถาบันการเงิน</span>
+                                </div>
+                                <div class="flex items-start gap-2 p-2.5 bg-slate-50 rounded-lg border border-slate-200">
+                                    <span class="w-5 h-5 rounded-full bg-purple-100 text-nacc-purple font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">3</span>
+                                    <span><strong>เงินลงทุน:</strong> หุ้น, กองทุนรวม, สลากออมทรัพย์, พันธบัตร, สินทรัพย์ดิจิทัล</span>
+                                </div>
+                                <div class="flex items-start gap-2 p-2.5 bg-slate-50 rounded-lg border border-slate-200">
+                                    <span class="w-5 h-5 rounded-full bg-purple-100 text-nacc-purple font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">4</span>
+                                    <span><strong>เงินให้กู้ยืม:</strong> ตั๋วสัญญาใช้เงิน, สัญญากู้ยืมเงินที่มีตัวตนลูกหนี้จริง</span>
+                                </div>
+                                <div class="flex items-start gap-2 p-2.5 bg-slate-50 rounded-lg border border-slate-200">
+                                    <span class="w-5 h-5 rounded-full bg-purple-100 text-nacc-purple font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">5</span>
+                                    <span><strong>ที่ดิน:</strong> โฉนด, น.ส.3, น.ส.3 ก., ส.ป.ก., เอกสารสิทธิ์ที่ดินทุกประเภท</span>
+                                </div>
+                                <div class="flex items-start gap-2 p-2.5 bg-slate-50 rounded-lg border border-slate-200">
+                                    <span class="w-5 h-5 rounded-full bg-purple-100 text-nacc-purple font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">6</span>
+                                    <span><strong>โรงเรือนและสิ่งปลูกสร้าง:</strong> บ้าน, อาคารพาณิชย์, คอนโดมิเนียม, สิ่งปลูกสร้างอื่น</span>
+                                </div>
+                                <div class="flex items-start gap-2 p-2.5 bg-slate-50 rounded-lg border border-slate-200">
+                                    <span class="w-5 h-5 rounded-full bg-purple-100 text-nacc-purple font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">7</span>
+                                    <span><strong>ยานพาหนะ:</strong> รถยนต์, รถจักรยานยนต์, เรือ, เครื่องบิน</span>
+                                </div>
+                                <div class="flex items-start gap-2 p-2.5 bg-slate-50 rounded-lg border border-slate-200">
+                                    <span class="w-5 h-5 rounded-full bg-purple-100 text-nacc-purple font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">8</span>
+                                    <span><strong>สิทธิและสัมปทาน:</strong> สิทธิเช่า, กรมธรรม์ประกันชีวิต, สิทธิในทรัพย์สินทางปัญญา</span>
+                                </div>
+                                <div class="flex items-start gap-2 p-2.5 bg-purple-50 rounded-lg border border-purple-200 sm:col-span-2">
+                                    <span class="w-5 h-5 rounded-full bg-purple-600 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">9</span>
+                                    <span><strong>ทรัพย์สินอื่น (มูลค่ารวมกันตั้งแต่ 300,000 บาทขึ้นไป):</strong> อาวุธปืน, พระเครื่อง, เครื่องประดับ, นาฬิกา, ทองคำ, กระเป๋าแบรนด์เนม, งานศิลปะ ฯลฯ</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- หนี้สิน 4 หมวด -->
+                        <div class="pt-2 border-t border-purple-100">
+                            <h3 class="font-bold text-red-700 font-prompt text-xs sm:text-sm uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                                <i class="fa-solid fa-file-invoice-dollar text-red-500"></i> รายการหนี้สิน (4 หมวด)
+                            </h3>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs sm:text-sm">
+                                <div class="flex items-start gap-2 p-2.5 bg-red-50/50 rounded-lg border border-red-200">
+                                    <span class="w-5 h-5 rounded-full bg-red-200 text-red-800 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">1</span>
+                                    <span><strong>เงินเบิกเกินบัญชี:</strong> หนี้สินเบิกเงินเกินบัญชีธนาคาร (OD / บัตรเครดิต)</span>
+                                </div>
+                                <div class="flex items-start gap-2 p-2.5 bg-red-50/50 rounded-lg border border-red-200">
+                                    <span class="w-5 h-5 rounded-full bg-red-200 text-red-800 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">2</span>
+                                    <span><strong>เงินกู้จากธนาคารและสถาบันการเงินอื่น:</strong> เงินกู้บ้าน, สินเชื่อส่วนบุคคล, เงินกู้สหกรณ์</span>
+                                </div>
+                                <div class="flex items-start gap-2 p-2.5 bg-red-50/50 rounded-lg border border-red-200">
+                                    <span class="w-5 h-5 rounded-full bg-red-200 text-red-800 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">3</span>
+                                    <span><strong>หนี้สินที่มีหลักฐานเป็นหนังสือ:</strong> สัญญากู้ยืมเงินบุคคลทั่วไปที่มีหนังสือสัญญา</span>
+                                </div>
+                                <div class="flex items-start gap-2 p-2.5 bg-red-50/50 rounded-lg border border-red-200">
+                                    <span class="w-5 h-5 rounded-full bg-red-200 text-red-800 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">4</span>
+                                    <span><strong>หนี้สินอื่น:</strong> หนี้สินประเภทอื่น รวมถึง <strong class="text-red-700">หนี้สินที่ไม่มีหลักฐานเป็นหนังสือ</strong></span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Tab 3: Documents Checklist -->
+                    <div id="content-docs" class="hidden space-y-4 text-sm text-slate-700">
+                        <div>
+                            <h3 class="font-bold text-nacc-purple font-prompt text-xs sm:text-sm uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                                <i class="fa-solid fa-id-card text-amber-500"></i> เอกสารส่วนบุคคลเบื้องต้นที่ต้องเตรียม (ผู้ยื่น, คู่สมรส, และบุตร)
+                            </h3>
+                            <ul class="space-y-2 text-xs sm:text-sm">
+                                <li class="flex items-start gap-2 p-2.5 bg-purple-50/40 border border-purple-100 rounded-lg">
+                                    <input type="checkbox" class="mt-0.5 rounded text-nacc-purple focus:ring-nacc-purple w-4 h-4 shrink-0">
+                                    <span><strong>สำเนาบัตรประชาชน:</strong> ของผู้มีหน้าที่ยื่น, คู่สมรส, และบุตรที่ยังไม่บรรลุนิติภาวะ</span>
+                                </li>
+                                <li class="flex items-start gap-2 p-2.5 bg-purple-50/40 border border-purple-100 rounded-lg">
+                                    <input type="checkbox" class="mt-0.5 rounded text-nacc-purple focus:ring-nacc-purple w-4 h-4 shrink-0">
+                                    <span><strong>สำเนาทะเบียนบ้าน:</strong> ของผู้มีหน้าที่ยื่น, คู่สมรส, และบุตรที่ยังไม่บรรลุนิติภาวะ</span>
+                                </li>
+                                <li class="flex items-start gap-2 p-2.5 bg-purple-50/40 border border-purple-100 rounded-lg">
+                                    <input type="checkbox" class="mt-0.5 rounded text-nacc-purple focus:ring-nacc-purple w-4 h-4 shrink-0">
+                                    <span><strong>สำเนาใบสำคัญการสมรส / ทะเบียนสมรส / ทะเบียนหย่า:</strong> (ถ้ามี)</span>
+                                </li>
+                                <li class="flex items-start gap-2 p-2.5 bg-purple-50/40 border border-purple-100 rounded-lg">
+                                    <input type="checkbox" class="mt-0.5 rounded text-nacc-purple focus:ring-nacc-purple w-4 h-4 shrink-0">
+                                    <span><strong>สำเนาสูติบัตร:</strong> ของบุตรที่ยังไม่บรรลุนิติภาวะ</span>
+                                </li>
+                                <li class="flex items-start gap-2 p-2.5 bg-purple-50/40 border border-purple-100 rounded-lg">
+                                    <input type="checkbox" class="mt-0.5 rounded text-nacc-purple focus:ring-nacc-purple w-4 h-4 shrink-0">
+                                    <span><strong>สำเนาคำสั่งแต่งตั้ง / คำสั่งลาออก / คำสั่งพ้นจากตำแหน่ง:</strong> เอกสารทางราชการที่ยืนยันวันที่มีผล</span>
+                                </li>
+                                <li class="flex items-start gap-2 p-2.5 bg-purple-50/40 border border-purple-100 rounded-lg">
+                                    <input type="checkbox" class="mt-0.5 rounded text-nacc-purple focus:ring-nacc-purple w-4 h-4 shrink-0">
+                                    <span><strong>สำเนาแบบแสดงรายการภาษีเงินได้บุคคลธรรมดา (ภ.ง.ด.) ฉบับเต็ม:</strong> ยื่นเฉพาะแบบ ภ.ง.ด.90 หรือ ภ.ง.ด.91 ปีภาษีที่ผ่านมา <strong class="text-red-600">(ฉบับเต็มเท่านั้น ไม่ใช้ใบรับรองหักภาษี ณ ที่จ่าย 50 ทวิ)</strong></span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- Notice Banner for Supporting Documents -->
+                        <div class="p-3.5 bg-amber-50 border-l-4 border-amber-500 rounded-r-lg text-xs sm:text-sm text-slate-700 space-y-1">
+                            <strong class="font-bold text-amber-900 font-prompt flex items-center gap-1.5">
+                                <i class="fa-solid fa-triangle-exclamation text-amber-600"></i> ข้อควรระวังสำคัญเรื่องเอกสารประกอบทรัพย์สินและหนี้สิน:
+                            </strong>
+                            <p class="leading-relaxed text-slate-700">
+                                ทุกรายการทรัพย์สิน (9 หมวด) และรายการหนี้สิน (4 หมวด) ที่ท่านระบุในยื่นบัญชี <strong class="text-nacc-purple">จะต้องมีเอกสารหลักฐานประกอบรองรับทุกรายการโดยละเอียด</strong> (เช่น หนังสือรับรองยอดเงินฝาก/เอกสารสิทธิ์ที่ดิน/สัญญากู้ยืม/ทะเบียนยานพาหนะ/ใบอนุญาต ป.4 ฯลฯ) หากยื่นรายการใดแต่ไม่มีเอกสารประกอบ อาจถูก ป.ป.ช. ทักท้วงและขอเอกสารเพิ่มเติมภายหลังได้
+                            </p>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-nacc-darkpurple text-purple-200 text-xs py-6 mt-12 border-t-2 border-amber-400">
+        <div class="max-w-6xl mx-auto px-4 text-center space-y-2">
+            <p class="text-white font-medium">ระบบคำนวณวันยื่นบัญชีทรัพย์สินและหนี้สินเพื่อการอำนวยความสะดวกเบื้องต้น</p>
+            <p class="text-purple-300">อ้างอิงตาม พระราชบัญญัติประกอบรัฐธรรมนูญว่าด้วยการป้องกันและปราบปรามการทุจริต พ.ศ. 2561 และระเบียบสำนักงาน ป.ป.ช.</p>
+            <div class="pt-2 border-t border-purple-800/60 max-w-xl mx-auto mt-3">
+                <p class="text-amber-300 font-semibold font-prompt text-xs flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-code text-amber-400"></i> พัฒนาโปรแกรมโดย: <span class="bg-purple-900/80 px-2.5 py-0.5 rounded border border-amber-400/40 text-amber-200">01010000</span>
+                </p>
+                <p class="text-purple-400 text-[11px] mt-1">หมายเหตุ: เว็บแอปพลิเคชันนี้จัดทำขึ้นโดยผู้พัฒนาเพื่อเป็นเครื่องมืออำนวยความสะดวกในการคำนวณเบื้องต้นเท่านั้น มิใช่เว็บแอปพลิเคชันอย่างเป็นทางการของสำนักงาน ป.ป.ช. โปรดตรวจสอบประกาศและข้อกำหนดล่าสุดกับทาง สำนักงาน ป.ป.ช. เพิ่มเติม (สายด่วน ป.ป.ช. 1205)</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // Format Date to Thai String
+        function formatThaiDate(date, includeYear = true) {
+            const thaiMonths = [
+                "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
+                "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
+            ];
+            const thaiDays = ["อาทิตย์", "จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์"];
+            
+            const dayOfWeek = thaiDays[date.getDay()];
+            const dayOfMonth = date.getDate();
+            const month = thaiMonths[date.getMonth()];
+            const year = date.getFullYear() + 543;
+
+            if (includeYear) {
+                return `วัน${dayOfWeek}ที่ ${dayOfMonth} ${month} พ.ศ. ${year}`;
+            }
+            return `วัน${dayOfWeek}ที่ ${dayOfMonth} ${month}`;
+        }
+
+        // Update Labels based on Case Selection
+        function updateLabels() {
+            const caseValue = document.querySelector('input[name="declarationCase"]:checked').value;
+            const labelEl = document.getElementById('startDateLabel');
+            const hintEl = document.getElementById('dateHint');
+
+            if (caseValue === 'entry') {
+                labelEl.innerHTML = '2. วันที่เข้ารับตำแหน่ง <span class="text-red-500">*</span>';
+                hintEl.innerText = 'ระบุวันที่ที่มีผลตามคำสั่งแต่งตั้ง หรือวันเข้ารับตำแหน่งตามกฎหมาย';
+            } else if (caseValue === 'exit') {
+                labelEl.innerHTML = '2. วันที่พ้นจากตำแหน่ง <span class="text-red-500">*</span>';
+                hintEl.innerText = 'ระบุวันที่พ้นจากตำแหน่ง หรือวันที่การดำรงตำแหน่งสิ้นสุดลง';
+            } else if (caseValue === 'every3years') {
+                labelEl.innerHTML = '2. วันที่ดำรงตำแหน่งครบทุก 3 ปี <span class="text-red-500">*</span>';
+                hintEl.innerText = 'ระบุวันที่อยู่ในตำแหน่งติดต่อกันมาจนครบระยะเวลา 3 ปี';
+            }
+
+            // Recalculate if date exists
+            if (document.getElementById('startDate').value) {
+                calculateDueDate();
+            }
+        }
+
+        // Main Calculation Function
+        function calculateDueDate() {
+            const startDateInput = document.getElementById('startDate').value;
+            const isExtensionChecked = document.getElementById('extensionRequested').checked;
+            const extensionDaysBox = document.getElementById('extensionDaysBox');
+            let extensionDays = parseInt(document.getElementById('extensionDays').value) || 0;
+
+            if (isExtensionChecked) {
+                extensionDaysBox.classList.remove('hidden');
+                if (extensionDays > 30) extensionDays = 30;
+                if (extensionDays < 1) extensionDays = 1;
+            } else {
+                extensionDaysBox.classList.add('hidden');
+                extensionDays = 0;
+            }
+
+            if (!startDateInput) {
+                document.getElementById('emptyResult').classList.remove('hidden');
+                document.getElementById('resultContent').classList.add('hidden');
+                return;
+            }
+
+            // Hide empty state, show results
+            document.getElementById('emptyResult').classList.add('hidden');
+            document.getElementById('resultContent').classList.remove('hidden');
+
+            const startDate = new Date(startDateInput);
+            
+            // Start counting from next day (Day 1)
+            const dayOne = new Date(startDate);
+            dayOne.setDate(dayOne.getDate() + 1);
+
+            // Total Days to add (Straight count without skipping holidays)
+            const totalDaysToAdd = 60 + (isExtensionChecked ? extensionDays : 0);
+            
+            // Target date calculation directly
+            let targetDate = new Date(startDate);
+            targetDate.setDate(targetDate.getDate() + totalDaysToAdd);
+
+            // Format Output Dates
+            document.getElementById('resStartDateTh').innerText = formatThaiDate(startDate);
+            document.getElementById('resDayOneTh').innerText = formatThaiDate(dayOne);
+            document.getElementById('resTotalDaysTh').innerText = `${totalDaysToAdd} วัน ${isExtensionChecked ? `(60 + ขยาย ${extensionDays} วัน)` : ''}`;
+            document.getElementById('resDueDateTh').innerText = formatThaiDate(targetDate);
+
+            // Calculate Remaining Days Countdown
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const calcDueDate = new Date(targetDate);
+            calcDueDate.setHours(0, 0, 0, 0);
+
+            const diffTime = calcDueDate - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            const countdownTag = document.getElementById('resCountdownTag');
+            if (diffDays > 0) {
+                countdownTag.className = "px-2.5 py-1 rounded-full font-semibold bg-emerald-500 text-white";
+                countdownTag.innerHTML = `<i class="fa-regular fa-clock mr-1"></i> เหลือเวลาอีก ${diffDays} วัน`;
+            } else if (diffDays === 0) {
+                countdownTag.className = "px-2.5 py-1 rounded-full font-semibold bg-amber-500 text-white animate-pulse";
+                countdownTag.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1"></i> ครบกำหนดวันนี้!`;
+            } else {
+                countdownTag.className = "px-2.5 py-1 rounded-full font-semibold bg-red-600 text-white";
+                countdownTag.innerHTML = `<i class="fa-solid fa-circle-xmark mr-1"></i> เลยกำหนดมาแล้ว ${Math.abs(diffDays)} วัน`;
+            }
+        }
+
+        // Tab Switching Logic
+        function switchTab(tabName) {
+            const tabs = ['persons', 'assets', 'docs'];
+            tabs.forEach(t => {
+                const tabBtn = document.getElementById(`tab-${t}`);
+                const tabContent = document.getElementById(`content-${t}`);
+                
+                if (t === tabName) {
+                    tabBtn.className = "py-2.5 px-4 text-nacc-purple border-b-2 border-nacc-purple font-bold whitespace-nowrap";
+                    tabContent.classList.remove('hidden');
+                } else {
+                    tabBtn.className = "py-2.5 px-4 text-slate-500 hover:text-nacc-purple border-b-2 border-transparent font-medium whitespace-nowrap";
+                    tabContent.classList.add('hidden');
+                }
+            });
+        }
+
+        // Set default date to today for convenience on load
+        window.onload = function() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            document.getElementById('startDate').value = `${year}-${month}-${day}`;
+            calculateDueDate();
+        };
+    </script>
+</body>
+</html>
